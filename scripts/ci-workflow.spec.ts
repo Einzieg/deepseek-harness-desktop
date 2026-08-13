@@ -270,6 +270,8 @@ describe('Electron Windows workflow', () => {
     expect(distribution?.run).toContain('pnpm run desktop:dist:win')
     expect(verification?.run).toContain('SHA256SUMS.txt')
     expect(verification?.run).toContain('Get-AuthenticodeSignature')
+    expect(verification?.run).toContain('Write-Host "$name')
+    expect(verification?.run).not.toContain('Write-Output "$name')
     expect(upload).toMatchObject({
       uses: 'actions/upload-artifact@v7',
       with: {

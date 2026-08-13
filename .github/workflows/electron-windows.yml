@@ -139,7 +139,7 @@ jobs:
             }
 
             $signature = Get-AuthenticodeSignature -LiteralPath $path
-            Write-Output "$name ($($file.Length) bytes, signature $($signature.Status))"
+            Write-Host "$name ($($file.Length) bytes, signature $($signature.Status))"
             $hash = (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant()
             "$hash  $name"
           }
