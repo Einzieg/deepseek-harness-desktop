@@ -44,11 +44,11 @@ Outputs are written under `apps/electron/release/`:
 
 The packaging step copies the exact local x64 Node runtime plus its license, records its version and SHA-256 in `resources/runtime/runtime.json`, and includes the complete required workspace peer closure. It also collapses the deep backend tree into `resources/backend.asar` plus `backend.asar.sha256`, avoiding NSIS path truncation while retaining physical files for external Node after first-run materialization. Release signing is used when signing credentials are configured; local unsigned builds report `NotSigned` through `Get-AuthenticodeSignature`.
 
-## GitHub Actions builds
+## GitHub Actions builds and releases
 
 The [Electron Windows workflow](../../.github/workflows/electron-windows.yml) runs for pull requests, pushes to `master`, matching `v*` tags, and manual dispatches. It installs the locked dependencies, runs the focused Electron, parent-supervisor, and workflow tests, builds both Windows x64 executables, writes `SHA256SUMS.txt`, and retains those three files as `deepseek-harness-windows-x64-<commit>` in the workflow run.
 
-The workflow reports each executable's Authenticode status but does not create a GitHub Release. Configure external code signing and use a separate protected publication step before treating an artifact as a distributable release.
+A matching `v<version>` tag must equal the Electron package version. After that build succeeds, a tag-only job with `contents: write` publishes the installer, portable executable, and checksum file to the corresponding GitHub Release. Tags whose version contains a hyphen, such as `v0.1.0-rc.5`, become prereleases and may carry unsigned binaries with their Authenticode status in the notes. Stable tags fail publication unless both executables have valid Authenticode signatures. Re-running a tag workflow replaces same-named Release assets.
 
 ## Model Experience
 
@@ -62,6 +62,6 @@ None; the desktop process boundary does not change model request content.
 
 - **Windows x64 first** — only Windows x64 runtime preparation and NSIS/portable targets are implemented.
 - **Loopback carrier** — phase one owns a random private loopback port but still uses HTTP/WebSocket. A native `file://` plus IPC carrier is deferred until the client connection layer can switch without duplicating protocol behavior.
-- **Signing is external** — repository code does not contain a signing identity. Distributable releases should configure code signing before publication.
+- **Signing is external** — repository code does not contain a signing identity. Prereleases may be unsigned and state that status in their Release notes; stable Release publication requires valid Authenticode signatures.
 - **First launch materializes the backend** — the first launch of a new backend digest verifies and copies its dependency archive into the short application cache; subsequent launches reuse it.
 - **Large artifacts** — the app carries Electron, Node.js, native tools, and the complete plugin runtime. The installer avoids repeated portable self-extraction and is the recommended artifact.

@@ -44,11 +44,11 @@ pnpm run desktop:dist:win
 
 打包步骤会复制本机精确的 x64 Node 运行时及其许可证，在 `resources/runtime/runtime.json` 中记录版本与 SHA-256，并包含所有必需 workspace peer 的完整闭包。它还会把深层后端树合并为 `resources/backend.asar` 与 `backend.asar.sha256`，避免 NSIS 截断长路径，同时在首次展开后继续为外部 Node 提供物理文件。配置签名凭据后会执行发布签名；本地未签名构建通过 `Get-AuthenticodeSignature` 显示为 `NotSigned`。
 
-## GitHub Actions 自动构建
+## GitHub Actions 自动构建与发布
 
 [Electron Windows 工作流](../../.github/workflows/electron-windows.yml)会在 PR（Pull Request）、推送到 `master`、匹配 `v*` 的 tag 以及手动派发时运行。它会安装锁定的依赖，运行聚焦的 Electron、父进程监督与工作流测试，构建两个 Windows x64 可执行文件，写入 `SHA256SUMS.txt`，并在工作流运行中以 `deepseek-harness-windows-x64-<commit>` 保留这三个文件。
 
-工作流会报告每个可执行文件的 Authenticode 状态，但不会创建 GitHub Release。将产物作为正式发布物之前，需要配置外部代码签名，并通过独立的受保护发布步骤进行发布。
+匹配 `v<version>` 的 tag 必须等于 Electron 包版本。构建成功后，只在 tag 上运行且具有 `contents: write` 权限的任务会把安装器、便携版和校验和文件发布到相应 GitHub Release。版本中含连字符的 tag（例如 `v0.1.0-rc.5`）会成为 prerelease，其中可以包含未签名二进制文件，Release 说明会记录其 Authenticode 状态。稳定版 tag 只有在两个可执行文件都具有有效 Authenticode 签名时才能发布。重新运行 tag 工作流会替换 Release 中的同名产物。
 
 ## 模型体验
 
@@ -62,6 +62,6 @@ pnpm run desktop:dist:win
 
 - **优先支持 Windows x64**：当前只实现 Windows x64 运行时准备以及 NSIS／便携版目标。
 - **回环载体**：第一阶段拥有随机私有回环端口，但仍使用 HTTP／WebSocket。原生 `file://` 加 IPC 载体会等到 client connection 层能在不复制协议行为的情况下切换时再实现。
-- **签名依赖外部配置**：仓库代码不包含签名身份。正式发布前应配置代码签名。
+- **签名依赖外部配置**：仓库代码不包含签名身份。prerelease 可以不签名，并会在 Release 说明中记录该状态；稳定版 Release 要求有效的 Authenticode 签名。
 - **首次启动会展开后端**：新后端摘要的首次启动会校验依赖归档并将其复制到短路径应用缓存；后续启动直接复用。
 - **产物较大**：应用携带 Electron、Node.js、原生工具和完整插件运行时。安装器无需每次执行便携版自解压，因此是推荐产物。

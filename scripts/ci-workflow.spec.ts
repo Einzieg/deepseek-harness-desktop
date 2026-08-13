@@ -212,8 +212,9 @@ describe('Electron Windows workflow', () => {
   it('builds verified installer and portable artifacts on hosted Windows', () => {
     const workflow = loadWorkflow('.github/workflows/electron-windows.yml')
     const build = workflowJob(workflow, 'build')
-    if (!isRecord(workflow.on) || !Array.isArray(build.steps)) {
-      throw new TypeError('Electron Windows workflow must define triggers and build steps')
+    const release = workflowJob(workflow, 'release')
+    if (!isRecord(workflow.on) || !Array.isArray(build.steps) || !Array.isArray(release.steps)) {
+      throw new TypeError('Electron Windows workflow must define triggers, build steps, and release steps')
     }
 
     expect(workflow.on).toEqual({
@@ -227,6 +228,14 @@ describe('Electron Windows workflow', () => {
       name: 'Windows x64 installer and portable',
       'runs-on': 'windows-latest',
       'timeout-minutes': 60,
+    })
+    expect(release).toMatchObject({
+      name: 'Publish GitHub release',
+      if: "startsWith(github.ref, 'refs/tags/v')",
+      needs: 'build',
+      'runs-on': 'windows-latest',
+      'timeout-minutes': 15,
+      permissions: { contents: 'write' },
     })
 
     const steps = build.steps.filter(isRecord)
@@ -275,7 +284,25 @@ describe('Electron Windows workflow', () => {
     expect(JSON.stringify(upload?.with)).toContain('apps/electron/release/DeepSeek-Harness-*.exe')
     expect(JSON.stringify(upload?.with)).toContain('apps/electron/release/SHA256SUMS.txt')
 
-    for (const step of steps.filter((candidate): candidate is Record<string, unknown> & { run: string } => (
+    const releaseSteps = release.steps.filter(isRecord)
+    const download = releaseSteps.find(step => step.name === 'Download Windows artifacts')
+    const publish = releaseSteps.find(step => step.name === 'Publish GitHub release')
+    expect(download).toMatchObject({
+      uses: 'actions/download-artifact@v8',
+      with: {
+        name: 'deepseek-harness-windows-x64-${{ github.sha }}',
+        path: 'release',
+      },
+    })
+    expect(publish).toMatchObject({ env: { GH_TOKEN: '${{ github.token }}' } })
+    expect(publish?.run).toContain('Stable release asset must have a valid Authenticode signature')
+    expect(publish?.run).toContain('gh release upload $tag @assetPaths --repo $repository --clobber')
+    expect(publish?.run).toContain("'create'")
+    expect(publish?.run).toContain("'--verify-tag'")
+    expect(publish?.run).toContain("'--generate-notes'")
+    expect(publish?.run).toContain("$releaseArguments += '--prerelease'")
+
+    for (const step of [...steps, ...releaseSteps].filter((candidate): candidate is Record<string, unknown> & { run: string } => (
       typeof candidate.run === 'string'
     ))) {
       expect(step.run, `${String(step.name)} must enable strict PowerShell error handling`).toMatch(
