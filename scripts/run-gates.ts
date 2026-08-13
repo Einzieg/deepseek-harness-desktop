@@ -6,6 +6,7 @@
  * @see ../.agents/notes/implemented/process/2026-07-06-parallel-pre-push-gates.md
  */
 import { spawn } from 'node:child_process'
+import { existsSync } from 'node:fs'
 import { availableParallelism } from 'node:os'
 import { resolve } from 'node:path'
 import { performance } from 'node:perf_hooks'
@@ -175,12 +176,24 @@ function pnpmExec(id: string, args: string[], options: Partial<Gate> = {}): Gate
   }
 }
 
-function pnpmInvocation(args: string[]): Pick<Gate, 'command' | 'args'> {
-  const entrypoint = process.env.npm_execpath
+export function pnpmInvocation(
+  args: string[],
+  entrypoint = process.env.npm_execpath,
+  platform: NodeJS.Platform = process.platform,
+  fileExists: (path: string) => boolean = existsSync,
+): Pick<Gate, 'command' | 'args'> {
   if (entrypoint === undefined || entrypoint === '') {
     throw new Error('run-gates: npm_execpath is unavailable; invoke the runner through a pnpm package script.')
   }
-  // Windows cannot spawn the pnpm.cmd shim directly; the JavaScript entrypoint keeps every host shell-free.
+  // Compiled pnpm releases expose an extensionless placeholder beside the
+  // real Windows executable. Running that placeholder through Node fails
+  // before every gate starts, so prefer its sibling executable when present.
+  const windowsExecutable = `${entrypoint}.exe`
+  if (platform === 'win32' && fileExists(windowsExecutable)) {
+    return { command: windowsExecutable, args }
+  }
+  // Windows cannot spawn the pnpm.cmd shim directly; a JavaScript entrypoint
+  // keeps traditional pnpm installations host-shell-free.
   return { command: process.execPath, args: [entrypoint, ...args] }
 }
 

@@ -29,12 +29,14 @@ const invocation = parseDshArgs(process.argv.slice(2), readVersion())
 switch (invocation.mode) {
   case 'profile': {
     const { runProfile } = await import('./profile-boot.ts')
-    await runProfile({
+    const running = await runProfile({
       environment: loadLayeredEnv('dsh'),
       profile: invocation.profile,
       patchFiles: invocation.patches,
       args: invocation.args,
     })
+    const { attachParentSupervisor } = await import('./parent-supervisor.ts')
+    attachParentSupervisor(running.shutdown)
     break
   }
   case 'plugin': {

@@ -8,6 +8,7 @@
     "icacls",
     "musl-gcc",
     "python3",
+    "pwsh",
     "sandbox-exec",
     "tar",
     "taskkill",
@@ -738,6 +739,21 @@
       ],
       "ignoreDependencies": [
         "@deepseek-ai/.+"
+      ]
+    },
+    "apps/electron": {
+      "entry": [
+        "scripts/**/*.mjs",
+        "src/main.ts",
+        "tests/**/*.spec.ts"
+      ],
+      "project": [
+        "scripts/**/*.mjs",
+        "src/**/*.ts",
+        "tests/**/*.ts"
+      ],
+      "ignoreDependencies": [
+        "@deepseek-ai/(cordis-plugin-group|dsh-(anonymous-user-id|atomic-write|bash-local|code-runtime|compaction|fs|invariants|output-retention|sandbox|scope|session-telemetry|session-title-llm|shell|spill|subagent-in-process-driver|subprocess|timeout|workflow))"
       ]
     },
     "packages/client/modules": {

@@ -3,11 +3,30 @@ import {
   defaultConcurrency,
   formatGateResultReason,
   gatesForMode,
+  pnpmInvocation,
   runGate,
   runGates,
   type Gate,
   type GateResult,
 } from './run-gates.ts'
+
+describe('pnpm invocation', () => {
+  it('uses the sibling executable for a compiled pnpm placeholder on Windows', () => {
+    expect(pnpmInvocation(
+      ['run', 'test'],
+      'C:\\pnpm\\pnpm',
+      'win32',
+      path => path === 'C:\\pnpm\\pnpm.exe',
+    )).toEqual({ command: 'C:\\pnpm\\pnpm.exe', args: ['run', 'test'] })
+  })
+
+  it('runs a traditional JavaScript entrypoint through the current Node process', () => {
+    expect(pnpmInvocation(['run', 'test'], '/private/pnpm.cjs', 'linux', () => false)).toEqual({
+      command: process.execPath,
+      args: ['/private/pnpm.cjs', 'run', 'test'],
+    })
+  })
+})
 
 function gate(id: string, options: Partial<Gate> = {}): Gate {
   return {

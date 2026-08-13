@@ -18,6 +18,8 @@ const ORDER_SECTIONS = ['dependencies', 'optionalDependencies'] as const
 
 /** The workspace root manifest, which is never a release member. */
 const WORKSPACE_ROOT_PACKAGE = '@deepseek-ai/dsh-root'
+/** Private product applications selected by the broad apps glob but excluded from npm releases. */
+const PRIVATE_APPLICATION_MANIFESTS = new Set(['apps/electron/package.json'])
 
 /** One publishable package of a release family. */
 export interface ReleaseMember {
@@ -89,6 +91,7 @@ export abstract class ReleaseFamily {
     const seen = new Set<string>()
     for (const manifestPath of manifestPaths) {
       const normalized = manifestPath.replaceAll('\\', '/')
+      if (PRIVATE_APPLICATION_MANIFESTS.has(normalized)) continue
       const manifest = readManifest(resolve(root, manifestPath))
       const name = requireString(manifest, 'name', normalized)
       const version = requireString(manifest, 'version', normalized)

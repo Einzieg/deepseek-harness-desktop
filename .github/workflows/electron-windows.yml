@@ -1,0 +1,160 @@
+name: Electron Windows
+
+on:
+  push:
+    branches: [master]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: electron-windows-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: pwsh
+
+env:
+  CI: 'true'
+  DSH_TELEMETRY_DISABLED: '1'
+  NODE_VERSION: '24.14.0'
+
+jobs:
+  build:
+    name: Windows x64 installer and portable
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/setup@v2
+        with:
+          dest: ${{ runner.temp }}/setup-pnpm
+          install: false
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          architecture: x64
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Verify packaging toolchain
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $true
+
+          $manifest = Get-Content -LiteralPath 'package.json' -Encoding UTF8 | ConvertFrom-Json
+          $expectedPnpm = $manifest.packageManager -replace '^pnpm@', ''
+          $actualPnpm = pnpm --version
+          if ($actualPnpm -ne $expectedPnpm) {
+            throw "Expected pnpm $expectedPnpm, found $actualPnpm."
+          }
+
+          $actualNode = node --version
+          if ($actualNode -ne "v$env:NODE_VERSION") {
+            throw "Expected Node v$env:NODE_VERSION, found $actualNode."
+          }
+          if ((node -p 'process.arch') -ne 'x64') {
+            throw 'Electron packaging requires an x64 Node runtime.'
+          }
+
+          $nodePath = (Get-Command node -CommandType Application | Select-Object -First 1).Source
+          $nodeLicense = Join-Path (Split-Path -Parent $nodePath) 'LICENSE'
+          if (-not (Test-Path -LiteralPath $nodeLicense -PathType Leaf)) {
+            throw "Node license is missing at $nodeLicense."
+          }
+
+      - name: Verify tag version
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $true
+
+          $manifest = Get-Content -LiteralPath 'apps/electron/package.json' -Encoding UTF8 | ConvertFrom-Json
+          $expectedTag = "v$($manifest.version)"
+          if ($env:RELEASE_TAG -ne $expectedTag) {
+            throw "Tag $env:RELEASE_TAG does not match Electron version $expectedTag."
+          }
+
+      - name: Install dependencies
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $true
+          pnpm install --frozen-lockfile
+
+      - name: Run focused tests
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $true
+          pnpm exec vitest run apps/electron/tests apps/cli/tests/parent-supervisor.spec.ts scripts/ci-workflow.spec.ts
+
+      - name: Build Windows distributions
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $true
+          pnpm run desktop:dist:win
+
+      - name: Verify artifacts and write checksums
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $true
+
+          $manifest = Get-Content -LiteralPath 'apps/electron/package.json' -Encoding UTF8 | ConvertFrom-Json
+          $releaseRoot = Resolve-Path -LiteralPath 'apps/electron/release'
+          $expectedNames = @(
+            "DeepSeek-Harness-Setup-$($manifest.version)-x64.exe"
+            "DeepSeek-Harness-$($manifest.version)-x64.exe"
+          )
+
+          $checksumLines = foreach ($name in $expectedNames) {
+            $path = Join-Path $releaseRoot $name
+            if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
+              throw "Expected Electron artifact is missing: $path"
+            }
+
+            $file = Get-Item -LiteralPath $path
+            if ($file.Length -eq 0) {
+              throw "Electron artifact is empty: $path"
+            }
+
+            $stream = [System.IO.File]::OpenRead($path)
+            try {
+              $first = $stream.ReadByte()
+              $second = $stream.ReadByte()
+            }
+            finally {
+              $stream.Dispose()
+            }
+            if ($first -ne 0x4d -or $second -ne 0x5a) {
+              throw "Electron artifact is not a Windows PE executable: $path"
+            }
+
+            $signature = Get-AuthenticodeSignature -LiteralPath $path
+            Write-Output "$name ($($file.Length) bytes, signature $($signature.Status))"
+            $hash = (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant()
+            "$hash  $name"
+          }
+
+          $checksumPath = Join-Path $releaseRoot 'SHA256SUMS.txt'
+          $checksumLines | Set-Content -LiteralPath $checksumPath -Encoding UTF8
+          Get-Content -LiteralPath $checksumPath -Encoding UTF8
+
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: deepseek-harness-windows-x64-${{ github.sha }}
+          path: |
+            apps/electron/release/DeepSeek-Harness-*.exe
+            apps/electron/release/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0

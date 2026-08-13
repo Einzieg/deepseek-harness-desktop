@@ -34,6 +34,18 @@ pnpm run build
 pnpm dsh web
 ```
 
+### 运行 Electron 桌面版 fork
+
+Windows x64 桌面应用保留现有 Web UI，同时接管后端生命周期、单实例行为与发布打包：
+
+```powershell
+$ErrorActionPreference = 'Stop'
+pnpm install
+pnpm run desktop:start
+```
+
+运行 `pnpm run desktop:dist:win` 可构建 NSIS 安装器和便携版可执行文件。架构、产物和当前限制详见 [Electron 应用指南](apps/electron/README.md)。
+
 ## 社区与支持
 
 - 欢迎通过 [GitHub Discussions](https://github.com/deepseek-ai/deepseek-harness/discussions) 提交反馈或 bug 报告。

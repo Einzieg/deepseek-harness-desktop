@@ -1,0 +1,89 @@
+{
+  "name": "deepseek-harness-electron",
+  "description": "Secure Electron desktop shell for DeepSeek Harness",
+  "author": "DeepSeek Harness Electron contributors",
+  "version": "0.1.0-rc.5",
+  "private": true,
+  "type": "module",
+  "main": "lib/main.js",
+  "scripts": {
+    "prepare:runtime:win": "pwsh -NoProfile -File scripts/prepare-windows-runtime.ps1",
+    "start": "electron .",
+    "pack:win": "pnpm run prepare:runtime:win && electron-builder --win dir",
+    "dist:win": "pnpm run prepare:runtime:win && electron-builder --win nsis portable"
+  },
+  "dependencies": {
+    "@deepseek-ai/cordis-plugin-group": "workspace:^",
+    "@deepseek-ai/dsh": "workspace:^",
+    "@deepseek-ai/dsh-anonymous-user-id": "workspace:^",
+    "@deepseek-ai/dsh-atomic-write": "workspace:^",
+    "@deepseek-ai/dsh-bash-local": "workspace:^",
+    "@deepseek-ai/dsh-code-runtime": "workspace:^",
+    "@deepseek-ai/dsh-compaction": "workspace:^",
+    "@deepseek-ai/dsh-fs": "workspace:^",
+    "@deepseek-ai/dsh-invariants": "workspace:^",
+    "@deepseek-ai/dsh-output-retention": "workspace:^",
+    "@deepseek-ai/dsh-sandbox": "workspace:^",
+    "@deepseek-ai/dsh-scope": "workspace:^",
+    "@deepseek-ai/dsh-session-telemetry": "workspace:^",
+    "@deepseek-ai/dsh-session-title-llm": "workspace:^",
+    "@deepseek-ai/dsh-shell": "workspace:^",
+    "@deepseek-ai/dsh-spill": "workspace:^",
+    "@deepseek-ai/dsh-subagent-in-process-driver": "workspace:^",
+    "@deepseek-ai/dsh-subprocess": "workspace:^",
+    "@deepseek-ai/dsh-timeout": "workspace:^",
+    "@deepseek-ai/dsh-workflow": "workspace:^"
+  },
+  "devDependencies": {
+    "@electron/asar": "3.4.1",
+    "electron": "43.4.0",
+    "electron-builder": "26.15.3"
+  },
+  "build": {
+    "appId": "ai.deepseek.harness.electron",
+    "productName": "DeepSeek Harness",
+    "executableName": "DeepSeekHarness",
+    "asar": true,
+    "asarUnpack": [
+      "node_modules/**/*"
+    ],
+    "afterPack": "scripts/archive-backend.mjs",
+    "directories": {
+      "buildResources": "assets",
+      "output": "release"
+    },
+    "files": [
+      "lib/**/*.js",
+      "assets/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": ".runtime",
+        "to": "runtime",
+        "filter": [
+          "node.exe",
+          "LICENSE",
+          "runtime.json"
+        ]
+      }
+    ],
+    "npmRebuild": false,
+    "win": {
+      "icon": "assets/icon.ico",
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "artifactName": "DeepSeek-Harness-${version}-${arch}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "DeepSeek Harness",
+      "artifactName": "DeepSeek-Harness-Setup-${version}-${arch}.${ext}"
+    }
+  }
+}

@@ -208,6 +208,83 @@ describe('CI workflow', () => {
   })
 })
 
+describe('Electron Windows workflow', () => {
+  it('builds verified installer and portable artifacts on hosted Windows', () => {
+    const workflow = loadWorkflow('.github/workflows/electron-windows.yml')
+    const build = workflowJob(workflow, 'build')
+    if (!isRecord(workflow.on) || !Array.isArray(build.steps)) {
+      throw new TypeError('Electron Windows workflow must define triggers and build steps')
+    }
+
+    expect(workflow.on).toEqual({
+      push: { branches: ['master'], tags: ['v*'] },
+      pull_request: null,
+      workflow_dispatch: null,
+    })
+    expect(workflow.permissions).toEqual({ contents: 'read' })
+    expect(workflow.defaults).toMatchObject({ run: { shell: 'pwsh' } })
+    expect(build).toMatchObject({
+      name: 'Windows x64 installer and portable',
+      'runs-on': 'windows-latest',
+      'timeout-minutes': 60,
+    })
+
+    const steps = build.steps.filter(isRecord)
+    const checkout = steps.find(step => step.uses === 'actions/checkout@v7')
+    const pnpmSetup = steps.find(step => step.uses === 'pnpm/setup@v2')
+    const nodeSetup = steps.find(step => step.uses === 'actions/setup-node@v7')
+    const install = steps.find(step => step.name === 'Install dependencies')
+    const tests = steps.find(step => step.name === 'Run focused tests')
+    const distribution = steps.find(step => step.name === 'Build Windows distributions')
+    const verification = steps.find(step => step.name === 'Verify artifacts and write checksums')
+    const upload = steps.find(step => step.name === 'Upload Windows artifacts')
+
+    expect(checkout).toMatchObject({ with: { 'persist-credentials': false } })
+    expect(pnpmSetup).toMatchObject({
+      with: {
+        dest: runnerPrivatePnpmDestination,
+        install: false,
+      },
+    })
+    expect(nodeSetup).toMatchObject({
+      with: {
+        'node-version': '${{ env.NODE_VERSION }}',
+        architecture: 'x64',
+        cache: 'pnpm',
+        'cache-dependency-path': 'pnpm-lock.yaml',
+      },
+    })
+    expect(install?.run).toContain('pnpm install --frozen-lockfile')
+    expect(tests?.run).toContain('apps/electron/tests')
+    expect(tests?.run).toContain('apps/cli/tests/parent-supervisor.spec.ts')
+    expect(tests?.run).toContain('scripts/ci-workflow.spec.ts')
+    expect(distribution?.run).toContain('pnpm run desktop:dist:win')
+    expect(verification?.run).toContain('SHA256SUMS.txt')
+    expect(verification?.run).toContain('Get-AuthenticodeSignature')
+    expect(upload).toMatchObject({
+      uses: 'actions/upload-artifact@v7',
+      with: {
+        'if-no-files-found': 'error',
+        'retention-days': 14,
+        'compression-level': 0,
+      },
+    })
+    expect(upload?.with).toMatchObject({
+      name: 'deepseek-harness-windows-x64-${{ github.sha }}',
+    })
+    expect(JSON.stringify(upload?.with)).toContain('apps/electron/release/DeepSeek-Harness-*.exe')
+    expect(JSON.stringify(upload?.with)).toContain('apps/electron/release/SHA256SUMS.txt')
+
+    for (const step of steps.filter((candidate): candidate is Record<string, unknown> & { run: string } => (
+      typeof candidate.run === 'string'
+    ))) {
+      expect(step.run, `${String(step.name)} must enable strict PowerShell error handling`).toMatch(
+        /^\$ErrorActionPreference = 'Stop'\n\$PSNativeCommandUseErrorActionPreference = \$true/,
+      )
+    }
+  })
+})
+
 describe('E2B e2e workflow', () => {
   it('is manual-only and fails loud before running the focused live suite', () => {
     const workflow = loadWorkflow('.github/workflows/e2b-e2e.yml')

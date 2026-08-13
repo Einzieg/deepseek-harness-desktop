@@ -34,6 +34,18 @@ pnpm run build
 pnpm dsh web
 ```
 
+### Run the Electron desktop fork
+
+The Windows x64 desktop application keeps the existing Web UI while owning its backend lifecycle, single-instance behavior, and release packaging:
+
+```powershell
+$ErrorActionPreference = 'Stop'
+pnpm install
+pnpm run desktop:start
+```
+
+Build the NSIS installer and portable executable with `pnpm run desktop:dist:win`. See the [Electron application guide](apps/electron/README.md) for the architecture, artifacts, and current limitations.
+
 ## Community and support
 
 - Feel free to submit feedback or bug reports through [GitHub Discussions](https://github.com/deepseek-ai/deepseek-harness/discussions).
