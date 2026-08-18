@@ -58,7 +58,7 @@ function reportTypeLinkViolations(gate: string, violations: string[]): void {
 export interface EventEntry {
   /** Scoped name, e.g. `agent/request`. */
   name: string
-  /** The scope prefix, e.g. `agent` (everything before the first `/`). */
+  /** The event namespace, e.g. `agent` or the package-scoped `@deepseek-ai/cordis`. */
   scope: string
   /** Full signature text (the method-signature member, JSDoc stripped). */
   signature: string
@@ -221,7 +221,9 @@ export class CordisCatalogProjector {
         if (isMode(mode)) {
           entries.push({
             name: event.name,
-            scope: event.name.split('/')[0] ?? event.name,
+            scope: event.name.startsWith('@')
+              ? event.name.split('/').slice(0, 2).join('/')
+              : event.name.split('/')[0] ?? event.name,
             signature: event.text,
             jsDoc: event.jsDoc ?? '',
             mode,

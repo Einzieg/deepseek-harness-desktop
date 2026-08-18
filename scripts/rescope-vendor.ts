@@ -95,6 +95,16 @@ const GENERIC_SKIPS: readonly GenericSkip[] = [
   { file: 'apps/cli/tests/web-agent-presets.e2e.ts', upstream: ['cordis'] },
   { file: 'apps/web/tests/agent-preset-authoring.e2e.ts', upstream: ['cordis'] },
   { file: 'packages/preset/agent-presets/tests/session.spec.ts', upstream: ['cordis'] },
+  // The locale key labels Cordis runtime status; it is not a package reference.
+  { file: 'packages/client/ui-settings-plugin-inventory/src/client/PluginInventorySettingsTab.tsx', upstream: ['cordis'] },
+  // Cordis UI locale namespaces and source ids are product identifiers. The
+  // remote event names mixed into index.ts are rescoped by an exact edit.
+  { file: 'packages/extensions/ui-cordis/src/client/CordisActionRow.tsx', upstream: ['cordis'] },
+  { file: 'packages/extensions/ui-cordis/src/client/CordisDefineRow.tsx', upstream: ['cordis'] },
+  { file: 'packages/extensions/ui-cordis/src/client/CordisPanel.tsx', upstream: ['cordis'] },
+  { file: 'packages/extensions/ui-cordis/src/client/CordisRunRow.tsx', upstream: ['cordis'] },
+  { file: 'packages/extensions/ui-cordis/src/client/index.ts', upstream: ['cordis'] },
+  { file: 'packages/extensions/ui-cordis/src/client/locales.ts', upstream: ['cordis'] },
   // The preset's own composition: its header comment and its system prompt name
   // the preset a model mounts, so the scoped name would send the model after an
   // id no roster reports.
@@ -129,6 +139,10 @@ const POSTCONDITIONS: readonly PostCondition[] = [
   { file: 'pnpm-workspace.yaml', text: 'cordis@4.0.0-rc.7', count: 0 },
   // The preset ids in this table are product data, not package names.
   { file: 'packages/client/ui-agent-preset/tests/locales.client.spec.ts', text: '[\'cordis\', \'presetCordisName\'', count: 1 },
+  { file: 'packages/client/ui-settings-plugin-inventory/src/client/PluginInventorySettingsTab.tsx', text: "t('cordis')", count: 1 },
+  { file: 'packages/extensions/ui-cordis/src/client/locales.ts', text: "export const NS = 'cordis'", count: 1 },
+  { file: 'packages/extensions/ui-cordis/src/client/index.ts', text: "name: 'cordis'", count: 1 },
+  { file: 'packages/extensions/ui-cordis/src/client/index.ts', text: "$on('@deepseek-ai/cordis/", count: 4 },
   // The preset id the shipped composition documents to its own model.
   { file: 'apps/cli/config/agent-presets/cordis/agent.cordis.yml', text: 'The `cordis` agent preset', count: 1 },
   { file: 'apps/cli/config/agent-presets/cordis/agent.cordis.yml', text: 'corrupting the `cordis` preset', count: 1 },
@@ -141,6 +155,23 @@ const POSTCONDITIONS: readonly PostCondition[] = [
  * quote a neighbouring line the generic pass would rewrite.
  */
 const EXACT_EDITS: readonly ExactEdit[] = [
+  {
+    id: 'ui-cordis-remote-event-names',
+    file: 'packages/extensions/ui-cordis/src/client/index.ts',
+    find: `  ctx.remote.$on('cordis/dynamic-package', () => { inventory.refresh() })
+  ctx.remote.$on('cordis/dynamic-retract', () => { inventory.refresh() })
+  ctx.remote.$on('cordis/request-run', (request) => {
+    if (!inventory.getSnapshot().rows.some(row => row.pluginId === request.pluginId)) inventory.refresh()
+  })
+  ctx.remote.$on('cordis/request-run-resolved', () => { inventory.refresh() })`,
+    replace: `  ctx.remote.$on('@deepseek-ai/cordis/dynamic-package', () => { inventory.refresh() })
+  ctx.remote.$on('@deepseek-ai/cordis/dynamic-retract', () => { inventory.refresh() })
+  ctx.remote.$on('@deepseek-ai/cordis/request-run', (request) => {
+    if (!inventory.getSnapshot().rows.some(row => row.pluginId === request.pluginId)) inventory.refresh()
+  })
+  ctx.remote.$on('@deepseek-ai/cordis/request-run-resolved', () => { inventory.refresh() })`,
+    expect: 1,
+  },
   {
     id: 'cordis-walk-merge-head',
     file: 'scripts/cordis-walk.ts',

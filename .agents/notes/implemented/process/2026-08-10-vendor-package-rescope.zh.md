@@ -28,6 +28,8 @@ Status: implemented
 
 Token 规则看不见两类点位，它们按名字逐处改：一是属性访问 `manifest.peerDependencies?.cordis`——TypeScript 抓不到过期的 `Record<string, string>` 键；二是把名字当数据的常量（`check-workspace-constraints.ts` 的 vendored 集合、`verify-cordis-config.ts` 的 group/include 名、`cordis-walk.ts` 与 `gen-scoped-events.ts` 与 typert `analyzer.ts` 里识别 `declare module` 目标的字符串、`app-boot/tsdown.config.ts` 的 `alwaysBundle`）。
 
+Cordis 自有的远程事件名属于运行时包命名空间，因此 `cordis/...` 会变为 `@deepseek-ai/cordis/...`，catalog projector 也把 `@scope/package` 当作一个完整事件 scope。UI locale 命名空间、input-trigger source 名和 preset id 仍是产品标识。只包含后者的文件按文件豁免；`ui-cordis/src/client/index.ts` 同时混有两类值，因此对该文件关闭 generic pass，再用一条精确改写只转换四个远程事件。Postcondition 同时钉住这条边界的两侧。
+
 Markdown 按「读者拿它做什么」一分为二。围栏一律跟着改，不看 info string——围栏里是读者要照抄的代码或要挂载的配置，包括写着 Loader 插件名的 `yaml` 围栏和紧邻编译围栏的 `ts ignore-check` 围栏。散文只在 `docs/` 下跟着改：教程里引用某个名字的句子，教的是本仓已不解析的东西。`docs/` 之外的散文——`vendor/*/README.md`、各包 README、`.agents/notes/`——保留写作当时的名字：既因为它记录的是当时的事实，也因为同一个拼写可能指别的东西，比如 Python SDK 的 `cordis` 选项、我们没 vendor 的 `@cordisjs/plugin-http`，或某个 agent-preset 的 id。
 
 ## 影响
