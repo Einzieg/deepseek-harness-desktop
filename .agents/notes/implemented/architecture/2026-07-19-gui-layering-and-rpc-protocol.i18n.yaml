@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-07-19-gui-layering-and-rpc-protocol.md
-2026-07-19-gui-layering-and-rpc-protocol.md: f9eea64f3509a6551c8852a4899cf28477c806ca
-2026-07-19-gui-layering-and-rpc-protocol.zh.md: a022a152786bbd8db1d0ff074de5be5080a80b07
+2026-07-19-gui-layering-and-rpc-protocol.md: 682817518c9cbaa91ec7be10d4bece30f6ad6c09
+2026-07-19-gui-layering-and-rpc-protocol.zh.md: 14fbca425981408c5bce682f24f35ce1a1a43a9e

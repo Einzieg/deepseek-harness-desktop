@@ -58,7 +58,7 @@ function reportTypeLinkViolations(gate: string, violations: string[]): void {
 export interface EventEntry {
   /** Scoped name, e.g. `agent/request`. */
   name: string
-  /** The event namespace, e.g. `agent` or the package-scoped `@deepseek-ai/cordis`. */
+  /** The scope prefix, e.g. `agent` (everything before the first `/`). */
   scope: string
   /** Full signature text (the method-signature member, JSDoc stripped). */
   signature: string
@@ -221,9 +221,7 @@ export class CordisCatalogProjector {
         if (isMode(mode)) {
           entries.push({
             name: event.name,
-            scope: event.name.startsWith('@')
-              ? event.name.split('/').slice(0, 2).join('/')
-              : event.name.split('/')[0] ?? event.name,
+            scope: event.name.split('/')[0] ?? event.name,
             signature: event.text,
             jsDoc: event.jsDoc ?? '',
             mode,
@@ -953,6 +951,12 @@ function anchorFor(headingText: string): string[] {
   return [`<a id="${githubSlug(headingText)}"></a>`, '']
 }
 
+/** Render a subsystem `file:line` source pointer as a file-only link. */
+function sourceLink(source: string): string {
+  const file = source.split(':')[0]
+  return `[\`${file}\`](../../${file})`
+}
+
 /** Render one harness event entry onto its owning page, nested under its scope heading. */
 function renderEvent(e: EventEntry, onPage: string, linkedTypePages: Readonly<Record<string, string>>): string[] {
   const out = [...anchorFor(`${e.name} — ${e.mode}`), `#### \`${e.name}\` — ${e.mode}`, '']
@@ -960,7 +964,7 @@ function renderEvent(e: EventEntry, onPage: string, linkedTypePages: Readonly<Re
   out.push('```' + FENCE, e.jsDoc, e.signature, '```', '')
   const links = typeLinks(e.signature, onPage, linkedTypePages)
   if (links) out.push(links, '')
-  out.push(`Source: [\`${e.source}\`](../../${e.source.split(':')[0]})`, '')
+  out.push(`Source: ${sourceLink(e.source)}`, '')
   return out
 }
 
@@ -980,7 +984,7 @@ function renderService(s: ServiceEntry, onPage: string, linkedTypePages: Readonl
     const links = typeLinks(methods.map(method => method.signature).join('\n'), onPage, linkedTypePages)
     if (links) out.push(links, '')
   }
-  out.push(`Source: [\`${s.source}\`](../../${s.source.split(':')[0]})`, '')
+  out.push(`Source: ${sourceLink(s.source)}`, '')
   return out
 }
 
@@ -1012,7 +1016,7 @@ export function renderPageRegion(page: string, services: ServiceEntry[], events:
     '',
     '## Cordis API',
     '',
-    'Generated from source by `scripts/gen-cordis-catalog.ts` (verified fresh by `pnpm run verify-cordis-catalog` in doc-sync; regenerate with `pnpm run gen-cordis-catalog`) — this section is byte-identical in both language sides of the page. Signature blocks use a `ts cordis-catalog` fence and keep the original source JSDoc; dispatch modes are defined in the [primer](../cordis-primer.md#dispatch-modes), and the framework-inherited `ctx` API lives in [cordis-api/inherited.md](../cordis-api/inherited.md).',
+    'Generated from source by `scripts/gen-cordis-catalog.ts` (verified fresh by `pnpm run verify-cordis-catalog` in doc-sync; regenerate with `pnpm run gen-cordis-catalog`) — the language sides differ only in locale-specific paired document paths. Signature blocks use a `ts cordis-catalog` fence and keep the original source JSDoc; dispatch modes are defined in the [primer](../cordis-primer.md#dispatch-modes), and the framework-inherited `ctx` API lives in [cordis-api/inherited.md](../cordis-api/inherited.md).',
     '',
   ]
   for (const s of services) lines.push(...renderService(s, page, policy.linkedTypePages))

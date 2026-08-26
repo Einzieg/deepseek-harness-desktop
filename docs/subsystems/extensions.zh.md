@@ -2,7 +2,7 @@
 
 [English](extensions.md) | 中文
 
-extensions 子系统允许 agent（智能体）定义带版本的 Cordis 包、运行其 host 与浏览器两半，并在编写代码前查询获准公开的运行时元数据。包生命周期与沙箱行为由 [`packages/extensions`](../../packages/extensions/README.md) 包组说明。
+extensions 子系统允许 agent（智能体）定义带版本的 Cordis 包、运行其 host 与浏览器两半，并在编写代码前查询获准公开的运行时元数据。包生命周期与沙箱行为由 [`packages/extensions`](../../packages/extensions/README.zh.md) 包组说明。
 
 <!-- BEGIN GENERATED cordis-surface (gen-cordis-catalog.ts) — do not edit between markers -->
 
@@ -10,7 +10,7 @@ extensions 子系统允许 agent（智能体）定义带版本的 Cordis 包、�
 
 ## Cordis API
 
-Generated from source by `scripts/gen-cordis-catalog.ts` (verified fresh by `pnpm run verify-cordis-catalog` in doc-sync; regenerate with `pnpm run gen-cordis-catalog`) — this section is byte-identical in both language sides of the page. Signature blocks use a `ts cordis-catalog` fence and keep the original source JSDoc; dispatch modes are defined in the [primer](../cordis-primer.md#dispatch-modes), and the framework-inherited `ctx` API lives in [cordis-api/inherited.md](../cordis-api/inherited.md).
+Generated from source by `scripts/gen-cordis-catalog.ts` (verified fresh by `pnpm run verify-cordis-catalog` in doc-sync; regenerate with `pnpm run gen-cordis-catalog`) — the language sides differ only in locale-specific paired document paths. Signature blocks use a `ts cordis-catalog` fence and keep the original source JSDoc; dispatch modes are defined in the [primer](../cordis-primer.zh.md#dispatch-modes), and the framework-inherited `ctx` API lives in [cordis-api/inherited.md](../cordis-api/inherited.md).
 
 <a id="ctxcordisinspect--cordisinspectregistryservice"></a>
 
@@ -60,9 +60,9 @@ async query( platform: CordisInspectPlatform, providerId: string, methodName: st
 resolveClientQuery( agent: Agent, requestId: CordisInspectRequestId, resolution: CordisInspectQueryResolution, ): CordisInspectResolveAck
 ```
 
-Types: [Agent](core.md)
+Types: [Agent](core.zh.md)
 
-Source: [`packages/extensions/cordis-host-runner/src/inspect-registry.ts:46`](../../packages/extensions/cordis-host-runner/src/inspect-registry.ts)
+Source: [`packages/extensions/cordis-host-runner/src/inspect-registry.ts`](../../packages/extensions/cordis-host-runner/src/inspect-registry.ts)
 
 <a id="ctxdynamiccordisrunner--dynamiccordisrunnerservice"></a>
 
@@ -252,17 +252,17 @@ inspectPackage( agent: Agent, pluginId: CordisDynamicPluginId, packageId: Cordis
 @Remote('invoke') async invoke( pluginId: CordisDynamicPluginId, pluginRunId: CordisDynamicPluginRunId, method: string, args: JsonValue, ): Promise<DynamicCordisInvokeResult>
 ```
 
-Types: [Agent](core.md)
+Types: [Agent](core.zh.md)
 
-Source: [`packages/extensions/cordis-host-runner/src/index.ts:124`](../../packages/extensions/cordis-host-runner/src/index.ts)
+Source: [`packages/extensions/cordis-host-runner/src/index.ts`](../../packages/extensions/cordis-host-runner/src/index.ts)
 
-<a id="deepseek-aicordis-events"></a>
+<a id="cordis-events"></a>
 
-### `@deepseek-ai/cordis/*` events
+### `cordis/*` events
 
-<a id="deepseek-aicordisdynamic-package--emit"></a>
+<a id="cordisdynamic-package--emit"></a>
 
-#### `@deepseek-ai/cordis/dynamic-package` — emit
+#### `cordis/dynamic-package` — emit
 
 One exact Plugin/Package activation is now live in the Host.
 
@@ -272,14 +272,14 @@ One exact Plugin/Package activation is now live in the Host.
  * @param pkg - stable plugin, immutable package, run identity, and label.
  * @mode emit
  */
-'@deepseek-ai/cordis/dynamic-package'(pkg: DynamicCordisPackage): void
+'cordis/dynamic-package'(pkg: DynamicCordisPackage): void
 ```
 
-Source: [`packages/extensions/cordis-host-runner/src/types.ts:379`](../../packages/extensions/cordis-host-runner/src/types.ts)
+Source: [`packages/extensions/cordis-host-runner/src/types.ts`](../../packages/extensions/cordis-host-runner/src/types.ts)
 
-<a id="deepseek-aicordisdynamic-retract--emit"></a>
+<a id="cordisdynamic-retract--emit"></a>
 
-#### `@deepseek-ai/cordis/dynamic-retract` — emit
+#### `cordis/dynamic-retract` — emit
 
 One exact activation was withdrawn.
 
@@ -289,14 +289,14 @@ One exact activation was withdrawn.
  * @param retracted - plugin, package, and run identity.
  * @mode emit
  */
-'@deepseek-ai/cordis/dynamic-retract'(retracted: DynamicCordisRetracted): void
+'cordis/dynamic-retract'(retracted: DynamicCordisRetracted): void
 ```
 
-Source: [`packages/extensions/cordis-host-runner/src/types.ts:385`](../../packages/extensions/cordis-host-runner/src/types.ts)
+Source: [`packages/extensions/cordis-host-runner/src/types.ts`](../../packages/extensions/cordis-host-runner/src/types.ts)
 
-<a id="deepseek-aicordisinspect-query--emit"></a>
+<a id="cordisinspect-query--emit"></a>
 
-#### `@deepseek-ai/cordis/inspect-query` — emit
+#### `cordis/inspect-query` — emit
 
 Request a live read-only query from the Client inspect registry.
 
@@ -306,14 +306,14 @@ Request a live read-only query from the Client inspect registry.
  * @param request - correlation, Session, provider, method, and JSON input.
  * @mode emit
  */
-'@deepseek-ai/cordis/inspect-query'(request: CordisInspectQueryRequest): void
+'cordis/inspect-query'(request: CordisInspectQueryRequest): void
 ```
 
-Source: [`packages/extensions/cordis-host-runner/src/types.ts:391`](../../packages/extensions/cordis-host-runner/src/types.ts)
+Source: [`packages/extensions/cordis-host-runner/src/types.ts`](../../packages/extensions/cordis-host-runner/src/types.ts)
 
-<a id="deepseek-aicordisinspect-query-resolved--emit"></a>
+<a id="cordisinspect-query-resolved--emit"></a>
 
-#### `@deepseek-ai/cordis/inspect-query-resolved` — emit
+#### `cordis/inspect-query-resolved` — emit
 
 Notify every Client that an inspect query has settled or been cancelled.
 
@@ -323,14 +323,14 @@ Notify every Client that an inspect query has settled or been cancelled.
  * @param resolved - exact query identity that is no longer answerable.
  * @mode emit
  */
-'@deepseek-ai/cordis/inspect-query-resolved'(resolved: CordisInspectQueryResolved): void
+'cordis/inspect-query-resolved'(resolved: CordisInspectQueryResolved): void
 ```
 
-Source: [`packages/extensions/cordis-host-runner/src/types.ts:397`](../../packages/extensions/cordis-host-runner/src/types.ts)
+Source: [`packages/extensions/cordis-host-runner/src/types.ts`](../../packages/extensions/cordis-host-runner/src/types.ts)
 
-<a id="deepseek-aicordisrequest-run--emit"></a>
+<a id="cordisrequest-run--emit"></a>
 
-#### `@deepseek-ai/cordis/request-run` — emit
+#### `cordis/request-run` — emit
 
 A Client-bearing activation needs a browser page, and may require a user decision.
 
@@ -340,14 +340,14 @@ A Client-bearing activation needs a browser page, and may require a user decisio
  * @param request - correlation identity, owner, target version, mode, and approval requirement.
  * @mode emit
  */
-'@deepseek-ai/cordis/request-run'(request: DynamicCordisRunRequest): void
+'cordis/request-run'(request: DynamicCordisRunRequest): void
 ```
 
-Source: [`packages/extensions/cordis-host-runner/src/types.ts:367`](../../packages/extensions/cordis-host-runner/src/types.ts)
+Source: [`packages/extensions/cordis-host-runner/src/types.ts`](../../packages/extensions/cordis-host-runner/src/types.ts)
 
-<a id="deepseek-aicordisrequest-run-resolved--emit"></a>
+<a id="cordisrequest-run-resolved--emit"></a>
 
-#### `@deepseek-ai/cordis/request-run-resolved` — emit
+#### `cordis/request-run-resolved` — emit
 
 A pending Client activation request left the answerable state.
 
@@ -357,8 +357,8 @@ A pending Client activation request left the answerable state.
  * @param resolved - request identity and outcome.
  * @mode emit
  */
-'@deepseek-ai/cordis/request-run-resolved'(resolved: DynamicCordisRequestResolved): void
+'cordis/request-run-resolved'(resolved: DynamicCordisRequestResolved): void
 ```
 
-Source: [`packages/extensions/cordis-host-runner/src/types.ts:373`](../../packages/extensions/cordis-host-runner/src/types.ts)
+Source: [`packages/extensions/cordis-host-runner/src/types.ts`](../../packages/extensions/cordis-host-runner/src/types.ts)
 <!-- END GENERATED cordis-surface -->

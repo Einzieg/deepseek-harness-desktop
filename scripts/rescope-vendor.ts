@@ -95,16 +95,6 @@ const GENERIC_SKIPS: readonly GenericSkip[] = [
   { file: 'apps/cli/tests/web-agent-presets.e2e.ts', upstream: ['cordis'] },
   { file: 'apps/web/tests/agent-preset-authoring.e2e.ts', upstream: ['cordis'] },
   { file: 'packages/preset/agent-presets/tests/session.spec.ts', upstream: ['cordis'] },
-  // The locale key labels Cordis runtime status; it is not a package reference.
-  { file: 'packages/client/ui-settings-plugin-inventory/src/client/PluginInventorySettingsTab.tsx', upstream: ['cordis'] },
-  // Cordis UI locale namespaces and source ids are product identifiers. The
-  // remote event names mixed into index.ts are rescoped by an exact edit.
-  { file: 'packages/extensions/ui-cordis/src/client/CordisActionRow.tsx', upstream: ['cordis'] },
-  { file: 'packages/extensions/ui-cordis/src/client/CordisDefineRow.tsx', upstream: ['cordis'] },
-  { file: 'packages/extensions/ui-cordis/src/client/CordisPanel.tsx', upstream: ['cordis'] },
-  { file: 'packages/extensions/ui-cordis/src/client/CordisRunRow.tsx', upstream: ['cordis'] },
-  { file: 'packages/extensions/ui-cordis/src/client/index.ts', upstream: ['cordis'] },
-  { file: 'packages/extensions/ui-cordis/src/client/locales.ts', upstream: ['cordis'] },
   // The preset's own composition: its header comment and its system prompt name
   // the preset a model mounts, so the scoped name would send the model after an
   // id no roster reports.
@@ -114,6 +104,35 @@ const GENERIC_SKIPS: readonly GenericSkip[] = [
   // GROUP_ORDER holds `packages/<group>/` directory names, not package names.
   { file: 'scripts/gen-module-graph.ts', upstream: ['cordis'] },
   { file: 'scripts/gen-doc-graphs.ts', upstream: ['cordis'] },
+  // `cordis/*` is the extensions event domain, not a package subpath. The
+  // generated catalogs and every producer/consumer must preserve that wire id.
+  { file: 'docs/event-producer-consumer.md', upstream: ['cordis'] },
+  { file: 'docs/event-producer-consumer.zh.md', upstream: ['cordis'] },
+  { file: 'docs/subsystems/extensions.md', upstream: ['cordis'] },
+  { file: 'docs/subsystems/extensions.zh.md', upstream: ['cordis'] },
+  { file: 'packages/api/remotes/src/remote-events.ts', upstream: ['cordis'] },
+  { file: 'packages/extensions/cordis-client-runner/src/client/index.ts', upstream: ['cordis'] },
+  { file: 'packages/extensions/cordis-client-runner/src/client/runtime.ts', upstream: ['cordis'] },
+  { file: 'packages/extensions/cordis-client-runner/tests/orchestrator.client.spec.ts', upstream: ['cordis'] },
+  { file: 'packages/extensions/cordis-client-runner/tests/plugin.client.spec.ts', upstream: ['cordis'] },
+  { file: 'packages/extensions/cordis-host-runner/src/index.ts', upstream: ['cordis'] },
+  { file: 'packages/extensions/cordis-host-runner/src/inspect-registry.ts', upstream: ['cordis'] },
+  { file: 'packages/extensions/cordis-host-runner/src/types.ts', upstream: ['cordis'] },
+  { file: 'packages/extensions/cordis-host-runner/tests/helpers.ts', upstream: ['cordis'] },
+  { file: 'packages/extensions/cordis-host-runner/tests/runner.spec.ts', upstream: ['cordis'] },
+  { file: 'packages/extensions/cordis-host-runner/tests/versioning.spec.ts', upstream: ['cordis'] },
+  { file: 'packages/extensions/tool-cordis/src/api-catalog.ts', upstream: ['cordis'] },
+  { file: 'packages/extensions/tool-cordis/src/providers.ts', upstream: ['cordis'] },
+  { file: 'packages/extensions/ui-cordis/src/client/index.ts', upstream: ['cordis'] },
+  { file: 'packages/extensions/ui-cordis/src/client/inventory.ts', upstream: ['cordis'] },
+  { file: 'scripts/gen-cordis-catalog.ts', upstream: ['cordis'] },
+  // The UI locale namespace and input-trigger source id are product keys.
+  { file: 'packages/client/ui-settings-plugin-inventory/src/client/PluginInventorySettingsTab.tsx', upstream: ['cordis'] },
+  { file: 'packages/extensions/ui-cordis/src/client/CordisActionRow.tsx', upstream: ['cordis'] },
+  { file: 'packages/extensions/ui-cordis/src/client/CordisDefineRow.tsx', upstream: ['cordis'] },
+  { file: 'packages/extensions/ui-cordis/src/client/CordisPanel.tsx', upstream: ['cordis'] },
+  { file: 'packages/extensions/ui-cordis/src/client/CordisRunRow.tsx', upstream: ['cordis'] },
+  { file: 'packages/extensions/ui-cordis/src/client/locales.ts', upstream: ['cordis'] },
 ]
 
 /** A string that must appear exactly `count` times once the rescope has run. */
@@ -139,10 +158,6 @@ const POSTCONDITIONS: readonly PostCondition[] = [
   { file: 'pnpm-workspace.yaml', text: 'cordis@4.0.0-rc.7', count: 0 },
   // The preset ids in this table are product data, not package names.
   { file: 'packages/client/ui-agent-preset/tests/locales.client.spec.ts', text: '[\'cordis\', \'presetCordisName\'', count: 1 },
-  { file: 'packages/client/ui-settings-plugin-inventory/src/client/PluginInventorySettingsTab.tsx', text: "t('cordis')", count: 1 },
-  { file: 'packages/extensions/ui-cordis/src/client/locales.ts', text: "export const NS = 'cordis'", count: 1 },
-  { file: 'packages/extensions/ui-cordis/src/client/index.ts', text: "name: 'cordis'", count: 1 },
-  { file: 'packages/extensions/ui-cordis/src/client/index.ts', text: "$on('@deepseek-ai/cordis/", count: 4 },
   // The preset id the shipped composition documents to its own model.
   { file: 'apps/cli/config/agent-presets/cordis/agent.cordis.yml', text: 'The `cordis` agent preset', count: 1 },
   { file: 'apps/cli/config/agent-presets/cordis/agent.cordis.yml', text: 'corrupting the `cordis` preset', count: 1 },
@@ -155,23 +170,6 @@ const POSTCONDITIONS: readonly PostCondition[] = [
  * quote a neighbouring line the generic pass would rewrite.
  */
 const EXACT_EDITS: readonly ExactEdit[] = [
-  {
-    id: 'ui-cordis-remote-event-names',
-    file: 'packages/extensions/ui-cordis/src/client/index.ts',
-    find: `  ctx.remote.$on('cordis/dynamic-package', () => { inventory.refresh() })
-  ctx.remote.$on('cordis/dynamic-retract', () => { inventory.refresh() })
-  ctx.remote.$on('cordis/request-run', (request) => {
-    if (!inventory.getSnapshot().rows.some(row => row.pluginId === request.pluginId)) inventory.refresh()
-  })
-  ctx.remote.$on('cordis/request-run-resolved', () => { inventory.refresh() })`,
-    replace: `  ctx.remote.$on('@deepseek-ai/cordis/dynamic-package', () => { inventory.refresh() })
-  ctx.remote.$on('@deepseek-ai/cordis/dynamic-retract', () => { inventory.refresh() })
-  ctx.remote.$on('@deepseek-ai/cordis/request-run', (request) => {
-    if (!inventory.getSnapshot().rows.some(row => row.pluginId === request.pluginId)) inventory.refresh()
-  })
-  ctx.remote.$on('@deepseek-ai/cordis/request-run-resolved', () => { inventory.refresh() })`,
-    expect: 1,
-  },
   {
     id: 'cordis-walk-merge-head',
     file: 'scripts/cordis-walk.ts',
@@ -207,12 +205,12 @@ const EXACT_EDITS: readonly ExactEdit[] = [
         "@deepseek-ai/.+"
       ]
     },
-    "packages/util/home": {`,
+    "packages/host/directory-picker-auto": {`,
     replace: `      "ignoreDependencies": [
         "@deepseek-ai/.+"
       ]
     },
-    "packages/util/home": {`,
+    "packages/host/directory-picker-auto": {`,
     expect: 1,
   },
   {
@@ -306,8 +304,8 @@ const EXACT_EDITS: readonly ExactEdit[] = [
     replace: `/**
  * Vendored framework libraries: rescoped into @deepseek-ai, so the gate below
  * would read them as plugin packages. They carry no cross-plugin runtime
- * identity to share — the framework itself is a platform module (external),
- * while these are ordinary libraries a browser bundle inlines.
+ * identity to share — the framework itself is a requested module-table row
+ * (external), while these are ordinary libraries a browser bundle inlines.
  */
 const VENDORED_LIBRARY = /^@deepseek-ai\\/(cosmokit|schemastery)(\\/|$)/
 
@@ -350,7 +348,7 @@ const VENDORED_LIBRARY = /^@deepseek-ai\\/(cosmokit|schemastery)(\\/|$)/
     id: 'vendoring-cookbook-name-invariant-zh',
     file: 'docs/cookbook/adding-a-vendored-package.zh.md',
     find: '保留上游的 `name`/`version`/`exports`/`type`',
-    replace: '改写 `name` 的 scope（[映射](../rescope.md)），保留上游的 `version`/`exports`/`type`',
+    replace: '改写 `name` 的 scope（[映射](../rescope.zh.md)），保留上游的 `version`/`exports`/`type`',
     expect: 1,
   },
   {

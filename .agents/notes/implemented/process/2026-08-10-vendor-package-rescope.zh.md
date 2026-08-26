@@ -10,7 +10,7 @@ Status: implemented
 
 ## 决定
 
-九个包统一改名进 `@deepseek-ai` scope。目录名、上游版本号、依赖 range 一律不动，所以 `vendor/README.md` 的清单仍然读作一份上游快照。面向使用者的映射表见 [docs/rescope.md](../../../../docs/rescope.md)。
+九个包统一改名进 `@deepseek-ai` scope。目录名、上游版本号、依赖 range 一律不动，所以 `vendor/README.md` 的清单仍然读作一份上游快照。面向使用者的映射表见 [docs/rescope.md](../../../../docs/rescope.zh.md)。
 
 | 目录 | npm 名 | 上游名 |
 |---|---|---|
@@ -27,8 +27,6 @@ Status: implemented
 改写只落在**带定界符的完整包名 token** 上：引号或反引号包裹的 specifier（可带 `/子路径`）、`package.json` 的 `name` 与依赖键、`cordis.yml` 的 `name:` 值、`tsconfig.base.json` 的 `paths` 键。因此以下同形串一律未改，它们不是包名：`cordis.yml` 及其家族文件名、Loader 的 `cordis:` 内建前缀（`cordis:include`、`cordis:group`，见 `vendor/loader/src/config/tree.ts`）、`cordis-config-entry` 这类 kind 串、`@deepseek-ai/dsh-tool-cordis`、Schemastery 上游的 `Symbol.for('schemastery')` 与 `vendor:` 元数据、`scripts/gen-module-graph.ts` 与 `gen-doc-graphs.ts` 里 `GROUP_ORDER` 的 `packages/<group>/` 目录名，以及 `vendor/*/README.md` 里的上游安装指引。
 
 Token 规则看不见两类点位，它们按名字逐处改：一是属性访问 `manifest.peerDependencies?.cordis`——TypeScript 抓不到过期的 `Record<string, string>` 键；二是把名字当数据的常量（`check-workspace-constraints.ts` 的 vendored 集合、`verify-cordis-config.ts` 的 group/include 名、`cordis-walk.ts` 与 `gen-scoped-events.ts` 与 typert `analyzer.ts` 里识别 `declare module` 目标的字符串、`app-boot/tsdown.config.ts` 的 `alwaysBundle`）。
-
-Cordis 自有的远程事件名属于运行时包命名空间，因此 `cordis/...` 会变为 `@deepseek-ai/cordis/...`，catalog projector 也把 `@scope/package` 当作一个完整事件 scope。UI locale 命名空间、input-trigger source 名和 preset id 仍是产品标识。只包含后者的文件按文件豁免；`ui-cordis/src/client/index.ts` 同时混有两类值，因此对该文件关闭 generic pass，再用一条精确改写只转换四个远程事件。Postcondition 同时钉住这条边界的两侧。
 
 Markdown 按「读者拿它做什么」一分为二。围栏一律跟着改，不看 info string——围栏里是读者要照抄的代码或要挂载的配置，包括写着 Loader 插件名的 `yaml` 围栏和紧邻编译围栏的 `ts ignore-check` 围栏。散文只在 `docs/` 下跟着改：教程里引用某个名字的句子，教的是本仓已不解析的东西。`docs/` 之外的散文——`vendor/*/README.md`、各包 README、`.agents/notes/`——保留写作当时的名字：既因为它记录的是当时的事实，也因为同一个拼写可能指别的东西，比如 Python SDK 的 `cordis` 选项、我们没 vendor 的 `@cordisjs/plugin-http`，或某个 agent-preset 的 id。
 
