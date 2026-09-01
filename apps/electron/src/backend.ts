@@ -3,7 +3,7 @@
 /** Message understood by the CLI's optional parent supervisor. */
 const PARENT_SHUTDOWN_MESSAGE = 'dsh:shutdown'
 /** Readiness line owned by the Web application bundle. */
-const READY_LINE = /(?:^|\r?\n)dsh web: (http:\/\/127\.0\.0\.1:\d+)(?=\s|$)/
+const READY_LINE = /(?:^|\r?\n)dsh web: (http:\/\/127\.0\.0\.1:\d+\/\?token=[A-Za-z0-9_-]+)(?=\s|$)/
 /** Maximum retained output used in fail-loud desktop diagnostics. */
 const OUTPUT_LIMIT = 64 * 1024
 
@@ -63,7 +63,11 @@ function validateReadyUrl(candidate: string): string | undefined {
     if (url.username !== '' || url.password !== '' || url.port === '') return undefined
     const port = Number(url.port)
     if (!Number.isInteger(port) || port < 1 || port > 65_535) return undefined
-    return url.origin
+    const parameters = [...url.searchParams.entries()]
+    if (url.pathname !== '/' || url.hash !== '') return undefined
+    if (parameters.length !== 1 || parameters[0]?.[0] !== 'token') return undefined
+    if (!/^[A-Za-z0-9_-]+$/u.test(parameters[0][1])) return undefined
+    return url.href
   } catch {
     return undefined
   }
@@ -139,7 +143,7 @@ export class DshBackend {
     if (this.stopRequested) throw new Error('DeepSeek Harness backend was stopped before startup')
     const child = this.spawn({
       modulePath: this.options.modulePath,
-      args: ['web', '--host', '127.0.0.1', '--port', '0'],
+      args: ['web', '--host', '127.0.0.1', '--port', '0', '--no-open'],
       cwd: this.options.cwd,
       environment: this.options.environment,
     })

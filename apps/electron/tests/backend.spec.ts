@@ -50,15 +50,25 @@ describe('DshBackend', () => {
     const { backend, child, requests } = fixture()
     const started = backend.start()
     child.stdout.write('booting\r\ndsh web: http://127.0.0.')
-    child.stdout.write('1:43821\r\n')
+    child.stdout.write('1:43821/?token=test_token-1\r\n')
 
-    await expect(started).resolves.toBe('http://127.0.0.1:43821')
+    await expect(started).resolves.toBe('http://127.0.0.1:43821/?token=test_token-1')
     expect(requests).toEqual([{
       modulePath: 'C:\\app\\dsh\\lib\\bin.js',
-      args: ['web', '--host', '127.0.0.1', '--port', '0'],
+      args: ['web', '--host', '127.0.0.1', '--port', '0', '--no-open'],
       cwd: 'C:\\Users\\Test',
       environment: { TESTING: '1' },
     }])
+  })
+
+  it('ignores readiness URLs without exactly one valid authentication token', async () => {
+    const { backend, child } = fixture()
+    const started = backend.start()
+    child.stdout.write('dsh web: http://127.0.0.1:43820/\n')
+    child.stdout.write('dsh web: http://127.0.0.1:43821/?token=first&token=second\n')
+    child.stdout.write('dsh web: http://127.0.0.1:43822/?token=valid_token-2\n')
+
+    await expect(started).resolves.toBe('http://127.0.0.1:43822/?token=valid_token-2')
   })
 
   it('fails loudly with stderr when the backend exits before readiness', async () => {
@@ -83,7 +93,7 @@ describe('DshBackend', () => {
   it('requests graceful disposal and waits for the child exit', async () => {
     const { backend, child } = fixture()
     const started = backend.start()
-    child.stdout.write('dsh web: http://127.0.0.1:40001\n')
+    child.stdout.write('dsh web: http://127.0.0.1:40001/?token=test-token\n')
     await started
 
     const stopped = backend.stop()
@@ -98,7 +108,7 @@ describe('DshBackend', () => {
     vi.useFakeTimers()
     const { backend, child } = fixture({ shutdownGraceMs: 50, forceWaitMs: 50 })
     const started = backend.start()
-    child.stdout.write('dsh web: http://127.0.0.1:40002\n')
+    child.stdout.write('dsh web: http://127.0.0.1:40002/?token=test-token\n')
     await started
 
     const stopped = backend.stop()
@@ -113,7 +123,7 @@ describe('DshBackend', () => {
     const unexpected = vi.fn<(exit: BackendExit) => void>()
     backend.onUnexpectedExit(unexpected)
     const started = backend.start()
-    child.stdout.write('dsh web: http://127.0.0.1:40003\n')
+    child.stdout.write('dsh web: http://127.0.0.1:40003/?token=test-token\n')
     await started
     child.fail('native failure')
     child.exit(9)

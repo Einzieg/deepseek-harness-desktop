@@ -8,7 +8,7 @@ English | [中文](README.zh.md)
 
 The phase-one desktop boundary is deliberately compatible with the existing application:
 
-- Electron starts `dsh web --host 127.0.0.1 --port 0` in a separate bundled Node.js runtime, waits for its validated readiness URL, and loads that exact loopback origin.
+- Electron starts `dsh web --host 127.0.0.1 --port 0 --no-open` in a separate bundled Node.js runtime, validates and loads the authenticated readiness URL, and confines in-window navigation to that exact loopback origin.
 - The renderer has `sandbox: true`, `contextIsolation: true`, no Node integration, no `<webview>`, and no preload API. Popups and navigation outside the exact application origin are denied and validated HTTP(S) links open in the system browser.
 - Only sanitized clipboard writes from the application origin are permitted. Camera, microphone, geolocation, notifications, and other permission requests are denied.
 - Closing the desktop application requests graceful profile disposal over process IPC, then terminates the backend after a bounded deadline. Parent-channel disconnect also disposes the backend.
@@ -61,7 +61,7 @@ None; the desktop process boundary does not change model request content.
 ## Known Limitations and Deferred Work
 
 - **Windows x64 first** — only Windows x64 runtime preparation and NSIS/portable targets are implemented.
-- **Loopback carrier** — phase one owns a random private loopback port but still uses HTTP/WebSocket. A native `file://` plus IPC carrier is deferred until the client connection layer can switch without duplicating protocol behavior.
+- **Loopback carrier** — phase one owns a random private loopback port and a per-launch browser authentication token, but still uses HTTP/WebSocket. A native `file://` plus IPC carrier is deferred until the client connection layer can switch without duplicating protocol behavior.
 - **Signing is external** — repository code does not contain a signing identity. Prereleases may be unsigned and state that status in their Release notes; stable Release publication requires valid Authenticode signatures.
 - **First launch materializes the backend** — the first launch of a new backend digest verifies and copies its dependency archive into the short application cache; subsequent launches reuse it.
 - **Large artifacts** — the app carries Electron, Node.js, native tools, and the complete plugin runtime. The installer avoids repeated portable self-extraction and is the recommended artifact.

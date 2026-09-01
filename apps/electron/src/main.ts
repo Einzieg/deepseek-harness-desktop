@@ -173,7 +173,7 @@ async function launch(): Promise<void> {
     )
   })
   backendUrl = await backend.start()
-  secureWindow(mainWindow, backendUrl)
+  secureWindow(mainWindow, new URL(backendUrl).origin)
   await mainWindow.loadURL(backendUrl)
 }
 
@@ -217,7 +217,7 @@ if (!app.requestSingleInstanceLock()) {
     if (mainWindow !== undefined || url === undefined) return
     void createWindow().then(async (window) => {
       mainWindow = window
-      secureWindow(window, url)
+      secureWindow(window, new URL(url).origin)
       await window.loadURL(url)
     }).catch((error: unknown) => { void failAndQuit('DeepSeek Harness could not open a window', error) })
   })

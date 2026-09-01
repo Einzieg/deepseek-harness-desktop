@@ -8,7 +8,7 @@
 
 第一阶段桌面边界有意保持与现有应用兼容：
 
-- Electron 在独立的随包 Node.js 运行时中启动 `dsh web --host 127.0.0.1 --port 0`，等待通过校验的就绪 URL，然后只加载这个精确回环来源。
+- Electron 在独立的随包 Node.js 运行时中启动 `dsh web --host 127.0.0.1 --port 0 --no-open`，校验并加载带认证信息的就绪 URL，再把窗口内导航限制到这个精确回环来源。
 - renderer（渲染进程）启用 `sandbox: true` 和 `contextIsolation: true`，不启用 Node 集成、`<webview>` 或 preload API。精确应用来源以外的弹窗和导航都会被拒绝；通过校验的 HTTP(S) 链接交给系统浏览器打开。
 - 只允许应用来源执行经过净化的剪贴板写入。相机、麦克风、地理位置、通知和其他权限请求均被拒绝。
 - 关闭桌面应用时，先通过进程 IPC 请求 profile 优雅释放，再在有界截止时间后终止后端。父通道断开也会触发后端释放。
@@ -61,7 +61,7 @@ pnpm run desktop:dist:win
 ## 已知限制与暂缓事项
 
 - **优先支持 Windows x64**：当前只实现 Windows x64 运行时准备以及 NSIS／便携版目标。
-- **回环载体**：第一阶段拥有随机私有回环端口，但仍使用 HTTP／WebSocket。原生 `file://` 加 IPC 载体会等到 client connection 层能在不复制协议行为的情况下切换时再实现。
+- **回环载体**：第一阶段拥有随机私有回环端口和每次启动生成的浏览器认证令牌，但仍使用 HTTP／WebSocket。原生 `file://` 加 IPC 载体会等到 client connection 层能在不复制协议行为的情况下切换时再实现。
 - **签名依赖外部配置**：仓库代码不包含签名身份。prerelease 可以不签名，并会在 Release 说明中记录该状态；稳定版 Release 要求有效的 Authenticode 签名。
 - **首次启动会展开后端**：新后端摘要的首次启动会校验依赖归档并将其复制到短路径应用缓存；后续启动直接复用。
 - **产物较大**：应用携带 Electron、Node.js、原生工具和完整插件运行时。安装器无需每次执行便携版自解压，因此是推荐产物。
