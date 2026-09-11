@@ -2,7 +2,7 @@
   "name": "deepseek-harness-electron",
   "description": "Secure Electron desktop shell for DeepSeek Harness",
   "author": "DeepSeek Harness Electron contributors",
-  "version": "0.1.2-alpha.3",
+  "version": "0.1.5-rc.2",
   "private": true,
   "type": "module",
   "main": "lib/main.js",
